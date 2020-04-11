@@ -53,9 +53,6 @@ class PatientsReader:
         #rewrite header 公表日 as リリース日
         for i in range(len(headers)):
 
-            if headers[i] == '\u3000':
-                 headers[i] = 'date'
-
             if headers[i] == '確定日':
                 headers[i] = 'リリース日'
 
@@ -69,15 +66,16 @@ class PatientsReader:
             dic = {}
             for i in range(len(headers)):
 
-                
+                if headers[i] == '\u3000':
+                    continue
+
                 if headers[i] == '主な症状':
                     continue
-                if headers[i] == 'date':
-                    continue
+
 
                 dic[headers[i]] = data[i]
                 #translate MM/DD to ISO-8601 datetime
-                
+
                 if headers[i] == 'リリース日':
                     md = data[i].split('月')
                     year = START_YEAR
@@ -95,15 +93,14 @@ class PatientsReader:
                     dic[headers[i]] = date_str
 
 
-                    
-
-                    #dic[headers[i]]=datetime.datetime.now().strftime('%Y-%m-%d')
-
-                   
-
                 if headers[i] == '居住地':
                     if data[i].find('（') > -1:
                         dic[headers[i]]= dic[headers[i]].split('（')[0]
+
+                if headers[i] == '年代':
+                    if data[i].find('非公表') > -1:
+                        dic[headers[i]] = "非公表"
+                    else: dic[headers[i]] = data[i] + "代"
 
                 if headers[i] == '性別':
                     if data[i].find('男') > -1:
