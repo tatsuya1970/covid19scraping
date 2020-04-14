@@ -10,7 +10,7 @@ JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 class CovidDataManager:
     def __init__(self):
         self.data = {
-            'contacts':{},
+            #'contacts':{},
             'querents':{},
             'patients':{},
             'patients_summary':{},

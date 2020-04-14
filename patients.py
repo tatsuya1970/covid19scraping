@@ -100,13 +100,17 @@ class PatientsReader:
                 if headers[i] == '年代':
                     if data[i].find('非公表') > -1:
                         dic[headers[i]] = "非公表"
+                    elif data[i].find('詳細情報のとおり') > -1:
+                        dic[headers[i]] = "該当の自治体のHP参照"
                     else: dic[headers[i]] = data[i] + "代"
 
                 if headers[i] == '性別':
                     if data[i].find('男') > -1:
                         dic[headers[i]] = "男性"
-                    if data[i].find('女') > -1:
+                    elif data[i].find('女') > -1:
                         dic[headers[i]] = "女性"
+                    elif data[i].find('詳細情報のとおり') > -1:
+                        dic[headers[i]] = "該当の自治体のHP参照"
 
                 if headers[i] == '退院':
                     if data[i].find('退院') > -1:
@@ -166,5 +170,3 @@ class PatientsReader:
 
 f1 = PatientsReader()
 print(f1.make_patients_dict())
-
-
