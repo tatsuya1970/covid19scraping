@@ -77,20 +77,22 @@ class PatientsReader:
                 #translate MM/DD to ISO-8601 datetime
 
                 if headers[i] == 'リリース日':
-                    md = data[i].split('月')
-                    year = START_YEAR
-                    month = int(md[0])
-                    day = int(md[1].replace('日',''))
-                    
-                    #2021 or more
-                    if month < prev_month:
-                        year = START_YEAR + 1
+                    if data[i].find('4月13日～14日') > -1:
+                        dic[headers[i]] = "4/13～14"
+                    else:
+                        md = data[i].split('月')
+                        year = START_YEAR
+                        month = int(md[0])
+                        day = int(md[1].replace('日',''))
+                        #2021 or more
+                        if month < prev_month:
+                            year = START_YEAR + 1
 
-                    date = datetime.datetime(year, month, day, tzinfo=JST)
-                    date_str = date.isoformat()
-                    prev_month = month
-                    #rewrite 公表日 as リリース日
-                    dic[headers[i]] = date_str
+                        date = datetime.datetime(year, month, day, tzinfo=JST)
+                        date_str = date.isoformat()
+                        prev_month = month
+                        #rewrite 公表日 as リリース日
+                        dic[headers[i]] = date_str
 
 
                 if headers[i] == '居住地':
