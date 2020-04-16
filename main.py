@@ -30,6 +30,8 @@ class CovidDataManager:
         self.data['patients'] = pr.make_patients_dict()
         self.data['patients_summary'] = pr.make_patients_summary_dict()
 
+        ir = InspectionsReader(now)
+
     def export_csv(self):
         for key in self.data:
             if key == 'last_update' or key == 'main_summary':
