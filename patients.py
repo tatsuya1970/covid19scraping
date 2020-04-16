@@ -77,10 +77,9 @@ class PatientsReader:
                 #translate MM/DD to ISO-8601 datetime
 
                 if headers[i] == 'リリース日':
-                    if data[i].find('4月13日～14日') > -1:
-                        dic[headers[i]] = "4/13～14"
-                    elif data[i].find('4月14日～15日') > -1:
-                        dic[headers[i]] = "4/14～15"
+                    if '～' in data[i]:
+                        # e.g) 4月13日〜14日
+                        dic[headers[i]] = data[i].replace('月', '/').replace('日', '')
                     else:
                         md = data[i].split('月')
                         year = START_YEAR
@@ -124,9 +123,6 @@ class PatientsReader:
                 if dic[headers[i]].find('\n') > -1:
                     dic[headers[i]] = dic[headers[i]].replace('\n','')
 
-
-
-
             patients_data.append(dic)
 
         patients['data'] = patients_data
@@ -161,7 +157,7 @@ class PatientsReader:
                 '小計':0
             }
             day['日付'] = start_datetime.isoformat()
-            
+
             for p in patients['data']:
                 if p['リリース日'] == day['日付']:
                     day['小計'] = day['小計'] + 1
