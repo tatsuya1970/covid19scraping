@@ -79,6 +79,8 @@ class PatientsReader:
                 if headers[i] == 'リリース日':
                     if data[i].find('4月13日～14日') > -1:
                         dic[headers[i]] = "4/13～14"
+                    elif data[i].find('4月14日～15日') > -1:
+                        dic[headers[i]] = "4/14～15"
                     else:
                         md = data[i].split('月')
                         year = START_YEAR
