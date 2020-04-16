@@ -1,40 +1,14 @@
 import re
 import datetime
-import urllib.request
-from bs4 import BeautifulSoup
+import scraping
 
 START_YEAR = 2020
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
 class PatientsReader:
-    def __init__(self, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
-        opener = urllib.request.build_opener()
-        opener.addheaders = [
-            ('Referer', 'http://localhost'),
-            ('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36 Edg/79.0.309.65'),
-        ]
-
-        html = opener.open(url)
-        bs = BeautifulSoup(html, 'html.parser')
-
-        table = bs.findAll('table')[0]
-        trs = table.findAll('tr')
-
-        table_data = []
-        for i in range(len(trs)):
-            cells = trs[i].findAll(['td', 'th'])
-            row = []
-            for cell in cells:
-                cell_str = cell.get_text()
-                #header cleaning
-                if i == 0:
-                    cell_str = cell_str.replace(' ', '').replace(' ','')
-                row.append(cell_str)
-            table_data.append(row)
-
-        self.data = table_data
-        #self.date = datetime.datetime.now(JST).isoformat()
-        self.date = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
+    def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
+        self.data = scraping.Scraping(url)
+        self.date = now
 
 
     def make_patients_dict(self):
@@ -168,5 +142,5 @@ class PatientsReader:
         return summary
 
 
-f1 = PatientsReader()
-print(f1.make_patients_dict())
+# f1 = PatientsReader()
+# print(f1.make_patients_dict())

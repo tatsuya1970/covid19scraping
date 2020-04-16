@@ -4,6 +4,7 @@ import datetime
 import glob
 import os
 from patients import PatientsReader
+from inspections import InspectionsReader
 
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
@@ -24,7 +25,8 @@ class CovidDataManager:
         }
 
     def fetch_data(self):
-        pr = PatientsReader()
+        now = datetime.datetime.now(JST).isoformat()
+        pr = PatientsReader(now)
         self.data['patients'] = pr.make_patients_dict()
         self.data['patients_summary'] = pr.make_patients_summary_dict()
 
