@@ -1,3 +1,4 @@
+import csv
 import datetime
 import pytz
 import scraping
@@ -73,19 +74,23 @@ class InspectionsReader:
         return summary
 
     def calc_inspections_summary(self, inspections:dict)->dict:
-        summary = {
-            '都内': [],  # TODO: 県内に変更したら動かなくなる?
-            'その他': [],
-            'labels': []
-        }
+        # HPから取得できない過去分をCSVで投入
+        summary = self.import_inspections_summary_from_csv()
+        tz = pytz.timezone('Asia/Tokyo')
         for data in inspections['data']:
-            if data['検査実施日'] == '合計':
+            # 注釈を取って年を付与
+            s = "2020/{date}".format(date=data['検査実施日'].replace('※', ''))
+            try:
+                yd = datetime.datetime.strptime(s, '%Y/%m/%d')
+                target_date = tz.localize(yd)
+            except ValueError:
+                print('[skip] Failed to parse date.{date}'.format(date=s))
                 continue
 
             summary['都内'].append(int(data['合計(検査件数)']))
             summary['その他'].append(0) # とりあえず使って無さそうなので0固定セット
             # summary['labels'].append(data['検査実施日'].replace('/','/'))     # TODO: jsonにescape\を1つだけ挿入する方法が分からない
-            summary['labels'].append(data['検査実施日'])
+            summary['labels'].append(yd.strftime('%m/%d'))
         return summary
 
     def calc_patients_summary(self, inspections:dict)->dict:
@@ -107,4 +112,19 @@ class InspectionsReader:
             day['小計'] = int(data['合計(陽性件数)'])
             summary.append(day)
 
+        return summary
+
+    def import_inspections_summary_from_csv(self):
+        summary = {
+            '都内': [],
+            'その他': [],
+            'labels': []
+        }
+        with open('./import/inspections_summary.csv') as f:
+            rows = [row for row in csv.reader(f)]
+            maindatas = rows[1:]
+        for v in maindatas:
+            summary['都内'].append(int(v[0]))
+            summary['その他'].append(int(v[1]))
+            summary['labels'].append(v[2])
         return summary
