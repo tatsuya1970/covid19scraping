@@ -33,6 +33,7 @@ class CovidDataManager:
         self.data['patients'] = pr.make_patients_dict()
         self.data['inspections'] = ir.make_inspections_dict()
         self.data['inspections_summary'] = ir.make_inspections_summary_dict()
+        self.data['discharges_summary'] = pr.make_discharges_summary_dict()
 
         # 陽性患者数は範囲日付でまとめられて正確に取得できないので、
         # 4/5以前以後を別のデータから取得してきて1つにマージする

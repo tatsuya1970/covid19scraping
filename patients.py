@@ -1,6 +1,8 @@
 import re
 import datetime
+import pytz
 import scraping
+import mojimoji
 
 START_YEAR = 2020
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
@@ -104,6 +106,11 @@ class PatientsReader:
         patients = self.make_patients_dict()
         summary = self.calc_patients_summary(patients)
         return summary
+    
+    def make_discharges_summary_dict(self):
+        patients = self.make_patients_dict()
+        summary = self.calc_discharges_summary(patients)
+        return summary
 
     def calc_patients_summary(self, patients:dict)->list:
         summary = []
@@ -128,6 +135,47 @@ class PatientsReader:
             start_datetime = start_datetime + datetime.timedelta(days=1)
 
         return summary
+
+    def calc_discharges_summary(self, patients:dict)->list:
+        discharges_summary = {
+            'date':self.date,
+            'data':[]
+        }
+        summary = []
+        maindatas = self.data[1:]
+
+        tz = pytz.timezone('Asia/Tokyo')
+        start_day = patients['data'][0]['リリース日']
+        start_datetime = datetime.datetime.fromisoformat(start_day)
+        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        while start_datetime <= end_datetime:
+            day = {
+                '日付':start_datetime.isoformat(),
+                '小計':0
+            }
+            for data in maindatas:
+                ss = data[-1].split('\n')
+                for s in ss:
+                    if s.find('退院') >= 0:
+                        d = s.replace('退院', '').replace('月','-').replace('日', '')   # 4月15日退院 を4/15に変換
+                        yd = "2020-{date}".format(date=mojimoji.zen_to_han(d))
+                        try:
+                            # TODO: RFC3339の美しい扱い方が分からない
+                            target_date = '{date}+09:00'.format(date=datetime.datetime.strptime(yd, '%Y-%m-%d').isoformat('T'))
+                        except ValueError:
+                            print('[skip] Failed to parse date.{date}'.format(date=s))
+                            continue
+
+                        print(day['日付'])
+                        print(target_date)
+
+                        if day['日付'] == target_date:
+                            day['小計'] += 1
+            summary.append(day)
+            start_datetime = start_datetime + datetime.timedelta(days=1)
+
+        discharges_summary['data'] = summary
+        return discharges_summary
 
 
 # f1 = PatientsReader()
