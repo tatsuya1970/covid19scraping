@@ -26,21 +26,20 @@ class CovidDataManager:
 
     def fetch_data(self):
         now = datetime.datetime.now(JST).isoformat()
-        # patients
-        pr = PatientsReader(now)
-        self.data['patients'] = pr.make_patients_dict()
 
-        # inspections
+        pr = PatientsReader(now)
         ir = InspectionsReader(now)
+
+        self.data['patients'] = pr.make_patients_dict()
         self.data['inspections'] = ir.make_inspections_dict()
-        res = ir.make_inspections_and_patients_summary_dict()
-        self.data['inspections_summary'] = res['inspections_summary']
+        self.data['inspections_summary'] = ir.make_inspections_summary_dict()
 
         # 陽性患者数は範囲日付でまとめられて正確に取得できないので、
         # 4/5以前以後を別のデータから取得してきて1つにマージする
         wk_patients_summary = pr.make_patients_summary_dict()
-        wk_patients_summary.extend(res['patients_summary'])
+        wk_patients_summary.extend(ir.make_patients_summary_dict())
         self.data['patients_summary'] = {'data': wk_patients_summary, 'date': now}
+
 
     def export_csv(self):
         for key in self.data:

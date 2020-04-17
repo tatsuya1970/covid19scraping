@@ -24,8 +24,6 @@ class PatientsReader:
         maindatas = self.data[1:]
         patients_data = []
 
-        print ('len(headers) = ',len(headers))
-
         #rewrite header 公表日 as リリース日
         for i in range(len(headers)):
 
@@ -34,8 +32,6 @@ class PatientsReader:
 
             if headers[i] == '詳細情報':
                 headers[i] = '退院'
-
-
 
         prev_month = 0 #to judge whether now is 2020 or more
         for data in maindatas:
