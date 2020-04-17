@@ -41,6 +41,8 @@ class CovidDataManager:
         wk_patients_summary.extend(ir.make_patients_summary_dict())
         self.data['patients_summary'] = {'data': wk_patients_summary, 'date': now}
 
+        self.data['contacts'] = cr.make_contacts_summary_dict()
+
 
     def export_csv(self):
         for key in self.data:
