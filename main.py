@@ -34,17 +34,17 @@ class CovidDataManager:
         # inspections
         ir = InspectionsReader(now)
         self.data['inspections'] = ir.make_inspections_dict()
-        # self.data['inspections_summary'] = ir.make_inspections_summary_dict()
+        self.data['inspections_summary'] = ir.make_inspections_summary_dict()
 
     def export_csv(self):
         for key in self.data:
-            if key == 'last_update' or key == 'main_summary':
+            if key == 'last_update' or key == 'main_summary' or key == 'inspections_summary':
                 continue
 
             datas = self.data[key]
             if datas == {}:
                 continue
-            
+
             maindatas = datas['data']
             header = list(maindatas[0].keys())
             csv_rows = [ header ]

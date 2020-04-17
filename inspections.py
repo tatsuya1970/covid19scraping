@@ -31,7 +31,6 @@ class InspectionsReader:
         ]
         maindatas = self.data[3:]
         inspections_data = []
-        print ('len(headers) = ',len(headers))
 
         # 検査件数と陽性件数を別項目に分割する
         for data in maindatas:
@@ -60,11 +59,30 @@ class InspectionsReader:
             inspections_data.append(dic)
 
         inspections['data'] = inspections_data
+        print(inspections_data)
         return inspections
 
     def make_inspections_summary_dict(self):
-        inspections_summary = {
-            'date':self.date,
-            'data':[]
+        inspections = self.make_inspections_dict()
+        summary = self.calc_inspections_summary(inspections)
+        inspections_summary = {'data': summary, 'date': self.date}
+        return inspections_summary
+
+    def calc_inspections_summary(self, inspections:dict)->dict:
+        summary = {
+            '都内': [],  # TODO: 県内に変更したら動かなくなる?
+            'その他': [],
+            'labels': []
         }
+        for data in inspections['data']:
+            if data['検査実施日'] == '合計':
+                continue
+
+            summary['都内'].append(int(data['合計(検査件数)']))
+            summary['その他'].append(0) # とりあえず使って無さそうなので0固定セット
+            # summary['labels'].append(data['検査実施日'].replace('/','/'))     # TODO: jsonにescape\を1つだけ挿入する方法が分からない
+            summary['labels'].append(data['検査実施日'])
+        print(summary)
+        return summary
+
 
