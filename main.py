@@ -5,30 +5,30 @@ import glob
 import os
 from patients import PatientsReader
 from inspections import InspectionsReader
+from contacts import ContactsReader
 
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
 class CovidDataManager:
     def __init__(self):
         self.data = {
-            #'contacts':{},
-            'querents':{},
             'patients':{},
-            'patients_summary':{},
-            'discharges':{},
             'discharges_summary':{},
-            'inspections':{},
+            'patients_summary':{},
             'inspections_summary':{},
-            'better_patients_summary':{},
+            'contacts':{},
+            'inspections':{},
             'last_update':datetime.datetime.now(JST).isoformat(),
-            'main_summary':{}
+            # 'querents':{},
+            # 'discharges':{},
+            # 'better_patients_summary':{},
+            # 'main_summary':{}
         }
 
     def fetch_data(self):
-        now = datetime.datetime.now(JST).isoformat()
-
-        pr = PatientsReader(now)
-        ir = InspectionsReader(now)
+        pr = PatientsReader(self.data['last_update'])
+        ir = InspectionsReader(self.data['last_update'])
+        cr = ContactsReader(self.data['last_update'])
 
         self.data['patients'] = pr.make_patients_dict()
         self.data['inspections'] = ir.make_inspections_dict()
@@ -39,7 +39,7 @@ class CovidDataManager:
         # 4/5以前以後を別のデータから取得してきて1つにマージする
         wk_patients_summary = pr.make_patients_summary_dict()
         wk_patients_summary.extend(ir.make_patients_summary_dict())
-        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': now}
+        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': self.data['last_update']}
 
         self.data['contacts'] = cr.make_contacts_summary_dict()
 
