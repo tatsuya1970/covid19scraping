@@ -26,11 +26,15 @@ class CovidDataManager:
 
     def fetch_data(self):
         now = datetime.datetime.now(JST).isoformat()
+        # patients
         pr = PatientsReader(now)
         self.data['patients'] = pr.make_patients_dict()
         self.data['patients_summary'] = pr.make_patients_summary_dict()
 
+        # inspections
         ir = InspectionsReader(now)
+        self.data['inspections'] = ir.make_inspections_dict()
+        # self.data['inspections_summary'] = ir.make_inspections_summary_dict()
 
     def export_csv(self):
         for key in self.data:
