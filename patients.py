@@ -4,6 +4,8 @@ import scraping
 
 START_YEAR = 2020
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
+# 感染患者リストから正しく集計可能なend_dateを決定する（以降は検査実施状況ページに任せる）
+TARGET_END_DATE = "2020-04-05T00:00:00+09:00"
 
 class PatientsReader:
     def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
@@ -105,18 +107,7 @@ class PatientsReader:
     def make_patients_summary_dict(self):
         patients = self.make_patients_dict()
         summary = self.calc_patients_summary(patients)
-        patients_summary = {'data': summary, 'date': self.date}
-        return patients_summary
-
-    #sample:最終更新日：2020年3月05日（木）
-    def parse_datetext(self, datetext:str)->str:
-        parsed_date = re.split('[^0-9]+', datetext)[1:4]
-        year = int(parsed_date[0])
-        month = int(parsed_date[1])
-        day = int(parsed_date[2])
-        date = datetime.datetime(year, month, day, tzinfo=JST)
-        date_str = date.isoformat()
-        return date_str
+        return summary
 
     def calc_patients_summary(self, patients:dict)->list:
         summary = []
@@ -124,7 +115,8 @@ class PatientsReader:
         start_day = patients['data'][0]['リリース日']
         start_datetime = datetime.datetime.fromisoformat(start_day)
 
-        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        # end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        end_datetime = datetime.datetime.fromisoformat(TARGET_END_DATE)
         while start_datetime <= end_datetime:
             day = {
                 '日付':'',

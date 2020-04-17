@@ -29,12 +29,18 @@ class CovidDataManager:
         # patients
         pr = PatientsReader(now)
         self.data['patients'] = pr.make_patients_dict()
-        self.data['patients_summary'] = pr.make_patients_summary_dict()
 
         # inspections
         ir = InspectionsReader(now)
         self.data['inspections'] = ir.make_inspections_dict()
-        self.data['inspections_summary'] = ir.make_inspections_summary_dict()
+        res = ir.make_inspections_and_patients_summary_dict()
+        self.data['inspections_summary'] = res['inspections_summary']
+
+        # 陽性患者数は範囲日付でまとめられて正確に取得できないので、
+        # 4/5以前以後を別のデータから取得してきて1つにマージする
+        wk_patients_summary = pr.make_patients_summary_dict()
+        wk_patients_summary.extend(res['patients_summary'])
+        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': now}
 
     def export_csv(self):
         for key in self.data:
@@ -85,6 +91,6 @@ class CovidDataManager:
 if __name__ == "__main__":
     dm = CovidDataManager()
     dm.fetch_data()
-    dm.import_csv()
+    # dm.import_csv()   広島に関してはcsvインポートが不要だと思うのでコメントアウト
     dm.export_csv()
     dm.export_json()

@@ -1,4 +1,5 @@
 import datetime
+import pytz
 import scraping
 import mojimoji
 
@@ -62,11 +63,14 @@ class InspectionsReader:
         print(inspections_data)
         return inspections
 
-    def make_inspections_summary_dict(self):
+    def make_inspections_and_patients_summary_dict(self):
         inspections = self.make_inspections_dict()
-        summary = self.calc_inspections_summary(inspections)
-        inspections_summary = {'data': summary, 'date': self.date}
-        return inspections_summary
+        summary = {
+            'inspections_summary': {'data': self.calc_inspections_summary(inspections), 'date': self.date},
+            'patients_summary': self.calc_patients_summary(inspections)
+        }
+        return summary
+
 
     def calc_inspections_summary(self, inspections:dict)->dict:
         summary = {
@@ -85,4 +89,23 @@ class InspectionsReader:
         print(summary)
         return summary
 
+    def calc_patients_summary(self, inspections:dict)->dict:
+        summary = []
+        tz = pytz.timezone('Asia/Tokyo')
+        for data in inspections['data']:
+            day = {
+                '日付':'',
+                '小計':0
+            }
+            # 注釈を取って年を付与
+            s = "2020/{date}".format(date=data['検査実施日'].replace('※', ''))
+            try:
+                target_date = tz.localize(datetime.datetime.strptime(s, '%Y/%m/%d'))
+            except ValueError:
+                print('[skip] Failed to parse date.{date}'.format(date=s))
+                continue
+            day['日付'] = target_date.isoformat()
+            day['小計'] = int(data['合計(陽性件数)'])
+            summary.append(day)
 
+        return summary

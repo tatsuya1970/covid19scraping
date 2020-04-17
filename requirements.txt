@@ -1,3 +1,4 @@
 beautifulsoup4==4.6.3
 certifi==2018.8.24
 mojimoji==0.0.10
+pytz==2019.3
