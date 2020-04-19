@@ -1,40 +1,18 @@
 import re
 import datetime
-import urllib.request
-from bs4 import BeautifulSoup
+import pytz
+import scraping
+import mojimoji
 
 START_YEAR = 2020
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
+# 感染患者リストから正しく集計可能なend_dateを決定する（以降は検査実施状況ページに任せる）
+TARGET_END_DATE = "2020-04-05T00:00:00+09:00"
 
 class PatientsReader:
-    def __init__(self, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
-        opener = urllib.request.build_opener()
-        opener.addheaders = [
-            ('Referer', 'http://localhost'),
-            ('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36 Edg/79.0.309.65'),
-        ]
-
-        html = opener.open(url)
-        bs = BeautifulSoup(html, 'html.parser')
-
-        table = bs.findAll('table')[0]
-        trs = table.findAll('tr')
-
-        table_data = []
-        for i in range(len(trs)):
-            cells = trs[i].findAll(['td', 'th'])
-            row = []
-            for cell in cells:
-                cell_str = cell.get_text()
-                #header cleaning
-                if i == 0:
-                    cell_str = cell_str.replace(' ', '').replace(' ','')
-                row.append(cell_str)
-            table_data.append(row)
-
-        self.data = table_data
-        #self.date = datetime.datetime.now(JST).isoformat()
-        self.date = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
+    def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
+        self.data = scraping.Scraping(url)
+        self.date = now
 
 
     def make_patients_dict(self):
@@ -48,8 +26,6 @@ class PatientsReader:
         maindatas = self.data[1:]
         patients_data = []
 
-        print ('len(headers) = ',len(headers))
-
         #rewrite header 公表日 as リリース日
         for i in range(len(headers)):
 
@@ -58,8 +34,6 @@ class PatientsReader:
 
             if headers[i] == '詳細情報':
                 headers[i] = '退院'
-
-
 
         prev_month = 0 #to judge whether now is 2020 or more
         for data in maindatas:
@@ -77,10 +51,9 @@ class PatientsReader:
                 #translate MM/DD to ISO-8601 datetime
 
                 if headers[i] == 'リリース日':
-                    if data[i].find('4月13日～14日') > -1:
-                        dic[headers[i]] = "4/13～14"
-                    elif data[i].find('4月14日～15日') > -1:
-                        dic[headers[i]] = "4/14～15"
+                    if '～' in data[i]:
+                        # e.g) 4月13日〜14日
+                        dic[headers[i]] = data[i].replace('月', '/').replace('日', '')
                     else:
                         md = data[i].split('月')
                         year = START_YEAR
@@ -124,9 +97,6 @@ class PatientsReader:
                 if dic[headers[i]].find('\n') > -1:
                     dic[headers[i]] = dic[headers[i]].replace('\n','')
 
-
-
-
             patients_data.append(dic)
 
         patients['data'] = patients_data
@@ -135,18 +105,12 @@ class PatientsReader:
     def make_patients_summary_dict(self):
         patients = self.make_patients_dict()
         summary = self.calc_patients_summary(patients)
-        patients_summary = {'data': summary, 'date': self.date}
-        return patients_summary
-
-    #sample:最終更新日：2020年3月05日（木）
-    def parse_datetext(self, datetext:str)->str:
-        parsed_date = re.split('[^0-9]+', datetext)[1:4]
-        year = int(parsed_date[0])
-        month = int(parsed_date[1])
-        day = int(parsed_date[2])
-        date = datetime.datetime(year, month, day, tzinfo=JST)
-        date_str = date.isoformat()
-        return date_str
+        return summary
+    
+    def make_discharges_summary_dict(self):
+        patients = self.make_patients_dict()
+        summary = self.calc_discharges_summary(patients)
+        return summary
 
     def calc_patients_summary(self, patients:dict)->list:
         summary = []
@@ -154,14 +118,15 @@ class PatientsReader:
         start_day = patients['data'][0]['リリース日']
         start_datetime = datetime.datetime.fromisoformat(start_day)
 
-        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        # end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        end_datetime = datetime.datetime.fromisoformat(TARGET_END_DATE)
         while start_datetime <= end_datetime:
             day = {
                 '日付':'',
                 '小計':0
             }
             day['日付'] = start_datetime.isoformat()
-            
+
             for p in patients['data']:
                 if p['リリース日'] == day['日付']:
                     day['小計'] = day['小計'] + 1
@@ -171,6 +136,47 @@ class PatientsReader:
 
         return summary
 
+    def calc_discharges_summary(self, patients:dict)->list:
+        discharges_summary = {
+            'date':self.date,
+            'data':[]
+        }
+        summary = []
+        maindatas = self.data[1:]
 
-f1 = PatientsReader()
-print(f1.make_patients_dict())
+        tz = pytz.timezone('Asia/Tokyo')
+        start_day = patients['data'][0]['リリース日']
+        start_datetime = datetime.datetime.fromisoformat(start_day)
+        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        while start_datetime <= end_datetime:
+            day = {
+                '日付':start_datetime.isoformat(),
+                '小計':0
+            }
+            for data in maindatas:
+                ss = data[-1].split('\n')
+                for s in ss:
+                    if s.find('退院') >= 0:
+                        d = s.replace('退院', '').replace('月','-').replace('日', '')   # 4月15日退院 を4/15に変換
+                        yd = "2020-{date}".format(date=mojimoji.zen_to_han(d))
+                        try:
+                            # TODO: RFC3339の美しい扱い方が分からない
+                            target_date = '{date}+09:00'.format(date=datetime.datetime.strptime(yd, '%Y-%m-%d').isoformat('T'))
+                        except ValueError:
+                            print('[skip] Failed to parse date.{date}'.format(date=s))
+                            continue
+
+                        print(day['日付'])
+                        print(target_date)
+
+                        if day['日付'] == target_date:
+                            day['小計'] += 1
+            summary.append(day)
+            start_datetime = start_datetime + datetime.timedelta(days=1)
+
+        discharges_summary['data'] = summary
+        return discharges_summary
+
+
+# f1 = PatientsReader()
+# print(f1.make_patients_dict())

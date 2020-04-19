@@ -4,39 +4,55 @@ import datetime
 import glob
 import os
 from patients import PatientsReader
+from inspections import InspectionsReader
+from contacts import ContactsReader
 
 JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
 
 class CovidDataManager:
     def __init__(self):
         self.data = {
-            #'contacts':{},
-            'querents':{},
             'patients':{},
-            'patients_summary':{},
-            'discharges':{},
             'discharges_summary':{},
-            'inspections':{},
+            'patients_summary':{},
             'inspections_summary':{},
-            'better_patients_summary':{},
+            'contacts':{},
+            'inspections':{},
             'last_update':datetime.datetime.now(JST).isoformat(),
-            'main_summary':{}
+            # 'querents':{},
+            # 'discharges':{},
+            # 'better_patients_summary':{},
+            # 'main_summary':{}
         }
 
     def fetch_data(self):
-        pr = PatientsReader()
+        pr = PatientsReader(self.data['last_update'])
+        ir = InspectionsReader(self.data['last_update'])
+        cr = ContactsReader(self.data['last_update'])
+
         self.data['patients'] = pr.make_patients_dict()
-        self.data['patients_summary'] = pr.make_patients_summary_dict()
+        self.data['inspections'] = ir.make_inspections_dict()
+        self.data['inspections_summary'] = ir.make_inspections_summary_dict()
+        self.data['discharges_summary'] = pr.make_discharges_summary_dict()
+
+        # 陽性患者数は範囲日付でまとめられて正確に取得できないので、
+        # 4/5以前以後を別のデータから取得してきて1つにマージする
+        wk_patients_summary = pr.make_patients_summary_dict()
+        wk_patients_summary.extend(ir.make_patients_summary_dict())
+        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': self.data['last_update']}
+
+        self.data['contacts'] = cr.make_contacts_summary_dict()
+
 
     def export_csv(self):
         for key in self.data:
-            if key == 'last_update' or key == 'main_summary':
+            if key == 'last_update' or key == 'main_summary' or key == 'inspections_summary':
                 continue
 
             datas = self.data[key]
             if datas == {}:
                 continue
-            
+
             maindatas = datas['data']
             header = list(maindatas[0].keys())
             csv_rows = [ header ]
@@ -77,6 +93,6 @@ class CovidDataManager:
 if __name__ == "__main__":
     dm = CovidDataManager()
     dm.fetch_data()
-    dm.import_csv()
+    # dm.import_csv()   広島に関してはcsvインポートが不要だと思うのでコメントアウト
     dm.export_csv()
     dm.export_json()
