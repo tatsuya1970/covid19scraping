@@ -146,8 +146,8 @@ class PatientsReader:
 
         tz = pytz.timezone('Asia/Tokyo')
         start_day = patients['data'][0]['リリース日']
-        start_datetime = datetime.datetime.fromisoformat(start_day)
-        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        start_datetime = datetime.datetime.strptime(start_day, '%Y-%m-%dT%H:%M:%S+09:00')
+        end_datetime = datetime.datetime.strptime(patients['date'], '%Y/%m/%d %H:%M')
         while start_datetime <= end_datetime:
             day = {
                 '日付':start_datetime.isoformat(),
