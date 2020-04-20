@@ -84,7 +84,6 @@ class InspectionsReader:
                 yd = datetime.datetime.strptime(s, '%Y/%m/%d')
                 target_date = tz.localize(yd)
             except ValueError:
-                print('[skip] Failed to parse date.{date}'.format(date=s))
                 continue
 
             summary['都内'].append(int(data['合計(検査件数)']))
@@ -106,7 +105,6 @@ class InspectionsReader:
             try:
                 target_date = tz.localize(datetime.datetime.strptime(s, '%Y/%m/%d'))
             except ValueError:
-                print('[skip] Failed to parse date.{date}'.format(date=s))
                 continue
             day['日付'] = target_date.isoformat()
             day['小計'] = int(data['合計(陽性件数)'])

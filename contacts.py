@@ -34,7 +34,6 @@ class ContactsReader:
             contacts_data.append(dic)
 
         contacts['data'] = contacts_data
-        print(contacts)
         return contacts
 
     def make_contacts_summary_dict(self):
@@ -57,7 +56,6 @@ class ContactsReader:
                 yd = datetime.datetime.strptime(s, '%Y-%m-%d')
                 target_date = tz.localize(yd)
             except ValueError:
-                print('[skip] Failed to parse date.{date}'.format(date=s))
                 continue
             day['日付'] = target_date.isoformat()
             day['date'] = yd.strftime('%Y-%m-%d')

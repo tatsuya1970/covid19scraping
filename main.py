@@ -91,8 +91,10 @@ class CovidDataManager:
             }
 
 if __name__ == "__main__":
+    print('START collecting data...')
     dm = CovidDataManager()
     dm.fetch_data()
     # dm.import_csv()   広島に関してはcsvインポートが不要だと思うのでコメントアウト
     dm.export_csv()
     dm.export_json()
+    print('Finish!')
