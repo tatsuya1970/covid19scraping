@@ -18,7 +18,7 @@ class CovidDataManager:
             'inspections_summary':{},
             'contacts':{},
             'inspections':{},
-            'last_update':datetime.datetime.now(JST).isoformat(),
+            'last_update':datetime.datetime.now().strftime('%Y/%m/%d %H:%M'),
             # 'querents':{},
             # 'discharges':{},
             # 'better_patients_summary':{},
