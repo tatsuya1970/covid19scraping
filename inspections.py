@@ -65,7 +65,8 @@ class InspectionsReader:
 
     def make_inspections_summary_dict(self):
         inspections = self.make_inspections_dict()
-        summary = {'data': self.calc_inspections_summary(inspections), 'date': self.date}
+        summary = self.calc_inspections_summary(inspections)
+        summary['date'] = self.date
         return summary
 
     def make_patients_summary_dict(self):
@@ -86,8 +87,8 @@ class InspectionsReader:
             except ValueError:
                 continue
 
-            summary['都内'].append(int(data['合計(検査件数)']))
-            summary['その他'].append(0) # とりあえず使って無さそうなので0固定セット
+            summary['data']['都内'].append(int(data['合計(検査件数)']))
+            summary['data']['その他'].append(0) # とりあえず使って無さそうなので0固定セット
             # summary['labels'].append(data['検査実施日'].replace('/','/'))     # TODO: jsonにescape\を1つだけ挿入する方法が分からない
             summary['labels'].append(yd.strftime('%m/%d'))
         return summary
@@ -114,15 +115,17 @@ class InspectionsReader:
 
     def import_inspections_summary_from_csv(self):
         summary = {
-            '都内': [],
-            'その他': [],
+            'data': {
+                '都内': [],
+                'その他': []
+            },
             'labels': []
         }
         with open('./import/inspections_summary.csv') as f:
             rows = [row for row in csv.reader(f)]
             maindatas = rows[1:]
         for v in maindatas:
-            summary['都内'].append(int(v[0]))
-            summary['その他'].append(int(v[1]))
+            summary['data']['都内'].append(int(v[0]))
+            summary['data']['その他'].append(int(v[1]))
             summary['labels'].append(v[2])
         return summary
