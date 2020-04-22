@@ -11,7 +11,7 @@ TARGET_END_DATE = "2020-04-05T00:00:00+09:00"
 
 class PatientsReader:
     def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
-        self.data = scraping.Scraping(url)
+        self.data = scraping.Scraping(url, 1)
         self.date = now
 
 

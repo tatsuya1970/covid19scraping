@@ -6,7 +6,7 @@ import mojimoji
 
 class InspectionsReader:
     def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/50/korona-kensazisseki.html'):
-        self.data = scraping.Scraping(url)
+        self.data = scraping.Scraping(url, 0)
         self.date = now
 
     def make_inspections_dict(self):
