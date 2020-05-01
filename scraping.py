@@ -1,7 +1,7 @@
 import urllib.request
 from bs4 import BeautifulSoup
 
-def Scraping(url:str)->list:
+def Scraping(url:str,table_number:int)->list:
     opener = urllib.request.build_opener()
     opener.addheaders = [
         ('Referer', 'http://localhost'),
@@ -11,7 +11,7 @@ def Scraping(url:str)->list:
     html = opener.open(url)
     bs = BeautifulSoup(html, 'html.parser')
 
-    table = bs.findAll('table')[0]
+    table = bs.findAll('table')[table_number]
     trs = table.findAll('tr')
 
     table_data = []

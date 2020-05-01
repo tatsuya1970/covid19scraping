@@ -11,7 +11,7 @@ TARGET_END_DATE = "2020-04-05T00:00:00+09:00"
 
 class PatientsReader:
     def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/57/bukan-coronavirus.html'):
-        self.data = scraping.Scraping(url)
+        self.data = scraping.Scraping(url, 1)
         self.date = now
 
 
@@ -146,8 +146,8 @@ class PatientsReader:
 
         tz = pytz.timezone('Asia/Tokyo')
         start_day = patients['data'][0]['リリース日']
-        start_datetime = datetime.datetime.fromisoformat(start_day)
-        end_datetime = datetime.datetime.fromisoformat(patients['date'])
+        start_datetime = datetime.datetime.strptime(start_day, '%Y-%m-%dT%H:%M:%S+09:00')
+        end_datetime = datetime.datetime.strptime(patients['date'], '%Y/%m/%d %H:%M')
         while start_datetime <= end_datetime:
             day = {
                 '日付':start_datetime.isoformat(),
@@ -163,11 +163,7 @@ class PatientsReader:
                             # TODO: RFC3339の美しい扱い方が分からない
                             target_date = '{date}+09:00'.format(date=datetime.datetime.strptime(yd, '%Y-%m-%d').isoformat('T'))
                         except ValueError:
-                            print('[skip] Failed to parse date.{date}'.format(date=s))
                             continue
-
-                        print(day['日付'])
-                        print(target_date)
 
                         if day['日付'] == target_date:
                             day['小計'] += 1
@@ -177,6 +173,3 @@ class PatientsReader:
         discharges_summary['data'] = summary
         return discharges_summary
 
-
-# f1 = PatientsReader()
-# print(f1.make_patients_dict())

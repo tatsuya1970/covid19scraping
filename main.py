@@ -18,7 +18,7 @@ class CovidDataManager:
             'inspections_summary':{},
             'contacts':{},
             'inspections':{},
-            'last_update':datetime.datetime.now(JST).isoformat(),
+            'lastUpdate':datetime.datetime.now().strftime('%Y/%m/%d %H:%M'),
             # 'querents':{},
             # 'discharges':{},
             # 'better_patients_summary':{},
@@ -26,9 +26,9 @@ class CovidDataManager:
         }
 
     def fetch_data(self):
-        pr = PatientsReader(self.data['last_update'])
-        ir = InspectionsReader(self.data['last_update'])
-        cr = ContactsReader(self.data['last_update'])
+        pr = PatientsReader(self.data['lastUpdate'])
+        ir = InspectionsReader(self.data['lastUpdate'])
+        cr = ContactsReader(self.data['lastUpdate'])
 
         self.data['patients'] = pr.make_patients_dict()
         self.data['inspections'] = ir.make_inspections_dict()
@@ -39,14 +39,14 @@ class CovidDataManager:
         # 4/5以前以後を別のデータから取得してきて1つにマージする
         wk_patients_summary = pr.make_patients_summary_dict()
         wk_patients_summary.extend(ir.make_patients_summary_dict())
-        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': self.data['last_update']}
+        self.data['patients_summary'] = {'data': wk_patients_summary, 'date': self.data['lastUpdate']}
 
         self.data['contacts'] = cr.make_contacts_summary_dict()
 
 
     def export_csv(self):
         for key in self.data:
-            if key == 'last_update' or key == 'main_summary' or key == 'inspections_summary':
+            if key == 'lastUpdate' or key == 'main_summary' or key == 'inspections_summary':
                 continue
 
             datas = self.data[key]
@@ -91,8 +91,10 @@ class CovidDataManager:
             }
 
 if __name__ == "__main__":
+    print('START collecting data...')
     dm = CovidDataManager()
     dm.fetch_data()
     # dm.import_csv()   広島に関してはcsvインポートが不要だと思うのでコメントアウト
     dm.export_csv()
     dm.export_json()
+    print('Finish!')
