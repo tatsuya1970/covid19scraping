@@ -7,7 +7,7 @@ TARGET_START_DATE = "2020-04-06T00:00:00+09:00"
 
 class ContactsReader:
     def __init__(self, now, url='https://www.pref.hiroshima.lg.jp/soshiki/50/korona-soudan-kennsai.html'):
-        self.data = scraping.Scraping(url, 0)
+        self.data = scraping.Scraping(url, 1) #2020.5.4修正 新しいテーブルができてたため （修正前はself.data = scraping.Scraping(url, 0)
         self.date = now
 
     def make_contacts_dict(self):
